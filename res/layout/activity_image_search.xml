@@ -26,8 +26,6 @@
         style="?android:attr/buttonStyleSmall"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/etSearch"
-        android:layout_alignBottom="@+id/etSearch"
         android:layout_alignParentRight="true"
         android:onClick="onImageSearch"
         android:text="@string/search" />
