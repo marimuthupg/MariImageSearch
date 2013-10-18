@@ -59,14 +59,6 @@
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
     <Spinner
-        android:id="@+id/spImageSize"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/tvTitle"
-        android:layout_alignTop="@+id/tvTitleImageSize"
-        android:entries="@array/image_size_array" />
-
-    <Spinner
         android:id="@+id/spColorFilter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -105,5 +97,13 @@
         android:layout_marginBottom="30dp"
         android:onClick="onOptionsSave"
         android:text="Save" />
+
+    <Spinner
+        android:id="@+id/spImageSize"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignTop="@+id/tvTitleImageSize"
+        android:entries="@array/image_size_array" />
 
 </RelativeLayout>

@@ -13,16 +13,24 @@ public class UrlBuilder {
 	private static final String IMAGE_SIZE_KEY = "imgsz";
 	private static final String IMAGE_TYPE_KEY = "imgtype";
 	private static final String SITE_FILTER_KEY = "as_sitesearch";
+	private static final String PAGE_START_KEY = "start";
+	
 	
 	private static final String VERSION_VALUE = "1.0";
 	
 	
-	public static String buildUrl(String query, SearchOptions options) {
+	public static String buildUrl(String query, SearchOptions options, int pageNum) {
 		StringBuilder builder = new StringBuilder(REQUEST_URL);
 		builder.append("?" + VERSION_KEY + "=" + VERSION_VALUE);
 		builder.append("&" + RESULT_SIZE_KEY + "=" + DEFAULT_RESULT_SIZE);
 		builder.append("&" + QUERY_KEY + "=" + Uri.encode(query));
 		
+	     if (pageNum > 1) {
+	    	 pageNum = ((pageNum - 1) * DEFAULT_RESULT_SIZE) - 1;
+	     }
+		
+	     builder.append("&" + PAGE_START_KEY + "="+pageNum);
+	     
 		if (options == null) {
 			return builder.toString();
 		}

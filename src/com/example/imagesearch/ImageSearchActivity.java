@@ -33,85 +33,106 @@ public class ImageSearchActivity extends Activity {
 	private ImageResultArrayAdapter imageAdapter;
 	private SearchOptions options;
 	private AsyncHttpClient client = new AsyncHttpClient();
-	
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image_search);
-        setupViews();
-        imageAdapter = new ImageResultArrayAdapter(this, imageResults);
-        gvImages.setAdapter(imageAdapter);
-        options = null;
-        gvImages.setOnItemClickListener(new OnItemClickListener() {
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_image_search);
+		setupViews();
+		imageAdapter = new ImageResultArrayAdapter(this, imageResults);
+		gvImages.setAdapter(imageAdapter);
+		options = null;
+		gvImages.setOnItemClickListener(new OnItemClickListener() {
 
 			@Override
 			public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-					ImageResult clickedImageResult = imageResults.get(position);
-					
-					Intent i = new Intent(getApplicationContext(), ImageDisplayActivity.class);
-					i.putExtra("imageResult", clickedImageResult);
-					startActivity(i);
+				ImageResult clickedImageResult = imageResults.get(position);
+
+				Intent i = new Intent(getApplicationContext(), ImageDisplayActivity.class);
+				i.putExtra("imageResult", clickedImageResult);
+				startActivity(i);
 			}
-        	
+
 		});
-    }
+
+		gvImages.setOnScrollListener(new ContinousScrollListener() {
+			
+			@Override
+			public void onLoadMore(int page, int totalItemsCount) {
+				Log.d("DEBUG", "page="+page+", total="+totalItemsCount+", actual="+imageResults.size());
+				Toast.makeText(getApplicationContext(), "Loading...", Toast.LENGTH_SHORT).show();
+				loadImages(page);
+			}
+		});
+	}
 
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.image_search, menu);
-        return true;
-    }
-    
-    private void setupViews() {
-    	etSearch = (EditText) findViewById(R.id.etSearch);
-    	gvImages = (GridView) findViewById(R.id.gvImages);
-    }
-    
-    public void onImageSearch(View v) {
-    	String query = etSearch.getText().toString();
-    	if (query.trim().isEmpty()) {
-    		Toast.makeText(getApplicationContext(), "Please enter search query", Toast.LENGTH_LONG);
-    		return;
-    	}
-    	Toast.makeText(this, "Search text entered: " + query, Toast.LENGTH_SHORT).show();
-    	
-    	String url = UrlBuilder.buildUrl(query, this.options);
-    	Log.d("DEBUG", "url="+url);
-    	client.get( url, 
-    				new JsonHttpResponseHandler() {
-    		
-    		@Override
-    		public void onSuccess(JSONObject response) {
-    			JSONArray imageJsonResults = null;
-    			try {
-    				imageJsonResults = response.getJSONObject("responseData").getJSONArray("results");
-    				imageResults.clear();
-    				imageResults.addAll(ImageResult.fromJSONArray(imageJsonResults));
-    				imageAdapter.notifyDataSetChanged();
-    			} catch(JSONException e) {
-    				Log.d("DEBUG", "Error: " + e.getMessage());
-    				Toast.makeText(getApplicationContext(), "Error retrieving search results", Toast.LENGTH_LONG).show();
-    			}
-    		}
-    	});
-    }
-    
-    public void onSettingsAction(MenuItem mi) {
-    	Intent i = new Intent(getApplicationContext(), AdvancedSearchOptionsActivity.class);
-    	i.putExtra("options", this.options);
-    	
-    	startActivityForResult(i, SETTINGS_REQUEST_CODE);
-    }
-    
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    	if (requestCode == SETTINGS_REQUEST_CODE) {
-    		if (resultCode == RESULT_OK) {
-    			options = (SearchOptions) data.getSerializableExtra("options");
-    			Log.d("DEBUG", "intent data = " + options);
-    		}
-    	}
-    }
-    
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.image_search, menu);
+		return true;
+	}
+
+	private void setupViews() {
+		etSearch = (EditText) findViewById(R.id.etSearch);
+		gvImages = (GridView) findViewById(R.id.gvImages);
+	}
+
+	public void onImageSearch(View v) {
+		String query = etSearch.getText().toString();
+		if (query.trim().isEmpty()) {
+			Toast.makeText(getApplicationContext(), "Please enter search query", Toast.LENGTH_LONG).show();
+			return;
+		}
+
+		imageResults.clear();
+		imageAdapter.notifyDataSetChanged();
+		Toast.makeText(this, "Searching ... " + query, Toast.LENGTH_SHORT).show();
+		loadImages(1);
+	}
+
+
+	private void loadImages(int pageNum) {
+		String query = etSearch.getText().toString();
+		if (query.trim().isEmpty()) {
+			Toast.makeText(getApplicationContext(), "Please enter search query", Toast.LENGTH_LONG).show();
+			return;
+		}
+
+		String url = UrlBuilder.buildUrl(query, this.options, pageNum);
+		client.get( url, 
+				new JsonHttpResponseHandler() {
+
+			@Override
+			public void onSuccess(JSONObject response) {
+				JSONArray imageJsonResults = null;
+				try {
+					imageJsonResults = response.getJSONObject("responseData").getJSONArray("results");
+					imageResults.addAll(ImageResult.fromJSONArray(imageJsonResults));
+					imageAdapter.notifyDataSetChanged();
+				} catch(JSONException e) {
+					Log.d("DEBUG", "Error: " + e.getMessage());
+					Toast.makeText(getApplicationContext(), "Error retrieving search results", Toast.LENGTH_LONG).show();
+				}
+			}
+		});
+	}
+
+	public void onSettingsAction(MenuItem mi) {
+		Intent i = new Intent(getApplicationContext(), AdvancedSearchOptionsActivity.class);
+		i.putExtra("options", this.options);
+
+		startActivityForResult(i, SETTINGS_REQUEST_CODE);
+	}
+
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == SETTINGS_REQUEST_CODE) {
+			if (resultCode == RESULT_OK) {
+				options = (SearchOptions) data.getSerializableExtra("options");
+				Log.d("DEBUG", "intent data = " + options);
+			}
+		}
+	}
+
 }
